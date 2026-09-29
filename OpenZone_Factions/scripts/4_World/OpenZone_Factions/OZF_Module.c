@@ -29,7 +29,8 @@ class OZF_Module : CF_ModuleWorld
         super.OnInit();
 
         EnableMissionStart();
-        EnableInvokeDisconnect();
+        // ClientDisconnect, а не InvokeDisconnect: див. OnClientDisconnect.
+        EnableClientDisconnect();
     }
 
     override void OnMissionStart(Class sender, CF_EventArgs args)
@@ -110,34 +111,43 @@ class OZF_Module : CF_ModuleWorld
             OZ_Log.Warn("factions need the bridge: the bot owns organisations, ranks, traits and leadership. With Bridge.Enabled false only the base faction works");
     }
 
-    // Роль -- відповідь моста на «зараз», а не властивість гравця. Поки він
-    // у Зоні, міст присилає її щоразу, як вона змінюється; щойно вийшов --
-    // присилати перестає, і те, що лишилось у пам'яті, з кожною хвилиною все
-    // менше схоже на правду.
+    // Гравець вийшов: прибираємо те, що має сенс лише поки він тут.
     //
-    // Прибираємо ЗАПИС, а не ставимо порожній: «ролі немає» і «ми не знаємо»
-    // -- різні відповіді, і саме на цій різниці тримається запасний шлях
-    // через файл акаунта.
-    override void OnInvokeDisconnect(Class sender, CF_EventArgs args)
+    // ПРОЕКЦІЮ РОЛЕЙ (OZ_Roles.Forget) ТУТ НЕ ЧІПАЄМО, хоч колись задумано
+    // було саме це. Міст шле проекцію лише ПРИ ЗМІНІ й пам'ятає, що цьому
+    // серверу вже віддав; забуває -- і перешле -- лише тоді, коли uid випаде
+    // з опиту (openzone-bridge/src/index.js, rolesSeen, «Forget whoever
+    // left»). Вихід гравця з опиту його не виводить: КПК, який хтось носить,
+    // додає до опиту сесійний uid хазяїна (OZ_PdaUidProvider), та й
+    // перезахід, що вміщається між двома опитами, випасти не встигає. Стерта
+    // тут проекція не повернулась би до першої зміни ролей у Discord, і гра
+    // вважала б людину одинаком -- на чужому КПК, а після перезаходу й на
+    // ній самій. Кеш проекцій живе весь запуск (див. OZ_Roles); запис
+    // відсутнього перекриє свіжа проекція, щойно міст її перешле.
+    //
+    // ПОДІЯ -- OnClientDisconnect. Тут стояв OnInvokeDisconnect, і за весь час
+    // він не прибрав нічого: CF кличе його з базовими аргументами, Cast до
+    // CF_EventPlayerDisconnectedArgs давав null. А UID у справжніх аргументах
+    // виходу -- хеш, не Steam64, під яким лежать наші мапи; Steam64 називає
+    // ядро (OZ_Players.PlainOfLeaving).
+    override void OnClientDisconnect(Class sender, CF_EventArgs args)
     {
-        super.OnInvokeDisconnect(sender, args);
+        super.OnClientDisconnect(sender, args);
 
         if (!GetGame().IsServer())
             return;
 
-        auto dArgs = CF_EventPlayerDisconnectedArgs.Cast(args);
-        if (!dArgs)
+        string uid = OZ_Players.PlainOfLeaving(args);
+        if (uid == "")
             return;
-
-        OZ_Roles.Forget(dArgs.UID);
 
         // Запрошення до того, хто вийшов, показувати більше нікому. Стояло в
         // ядрі й пережило винесення -- через що набір без цього мода не
         // компілювався зовсім; місце йому тут, поруч із рештою нашого.
-        OZ_FactionInvites.Forget(dArgs.UID);
+        OZ_FactionInvites.Forget(uid);
 
         // І його місце в лічильнику запитів до моста.
-        OZ_RoleOps.ForgetActor(dArgs.UID);
+        OZ_RoleOps.ForgetActor(uid);
     }
 
 
@@ -391,6 +401,31 @@ class OZF_Identity : OZ_IdentityService
 
         for (int i = 0; i < v.Traits.Count(); i++)
             outNames.Insert(OZ_RoleNames.Of(v.Traits[i]));
+    }
+
+    // Знімок із ДАНОГО запису -- поля Seen* саме його файла, а не OZ_Roles.Seen
+    // і не живий файл акаунта: для замороженого покоління обидва відповідали
+    // б про нове життя. Назви -- тим самим OZ_RoleNames, що й вище.
+    override string SeenRankNameIn(OZ_PlayerData d)
+    {
+        if (!d)
+            return "";
+        return OZ_RoleNames.Of(d.SeenRank);
+    }
+
+    // Порожній масив, а не null, коли викликач прийшов без свого: так
+    // обіцяє договір ядра. SeenTraits у старому файлі може не бути зовсім --
+    // тоді й міток немає.
+    override void SeenTraitNamesIn(OZ_PlayerData d, out array<string> outNames)
+    {
+        if (!outNames)
+            outNames = new array<string>();
+
+        if (!d || !d.SeenTraits)
+            return;
+
+        for (int i = 0; i < d.SeenTraits.Count(); i++)
+            outNames.Insert(OZ_RoleNames.Of(d.SeenTraits[i]));
     }
 
     override string RankName(string uid)

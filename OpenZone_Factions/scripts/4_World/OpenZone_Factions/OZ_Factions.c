@@ -676,6 +676,14 @@ class OZ_Factions
     // означає рівно «ще не заходив», і саме на це дивиться перший вхід.
     //
     // Постачальника тут немає навмисно: його контракт віддає організацію.
+    //
+    // ФАЙЛ АКАУНТА -- ЧЕРЕЗ Peek, а не Load (те саме в OrgOf нижче). Питають
+    // це й про ВІДСУТНІХ: автор старого повідомлення, хазяїн капсули, ціль
+    // маячка, рядок складу чи ростера. Load читав файл синхронно посеред
+    // запиту інтерфейсу, заводив його тим, кого тут не бувало, і лишав
+    // кожного такого в кеші сховища до кінця запуску. Peek для присутнього
+    // віддає той самий живий запис, для відсутнього -- коротку копію, а коли
+    // файла немає -- null, тобто «нічого не знаємо».
     static string BaseOfUid(string uid)
     {
         if (uid == "")
@@ -693,7 +701,7 @@ class OZ_Factions
             }
         }
 
-        OZ_PlayerData d = OZ_PlayerStore.Load(uid);
+        OZ_PlayerData d = OZ_PlayerStore.Peek(uid);
         if (!d)
             return "";
         return d.BaseFaction;
@@ -816,7 +824,8 @@ class OZ_Factions
                 return Guarded(byRole);
         }
 
-        OZ_PlayerData d = OZ_PlayerStore.Load(uid);
+        // Peek, а не Load -- причина в BaseOfUid.
+        OZ_PlayerData d = OZ_PlayerStore.Peek(uid);
         if (!d)
             return "";
         return Guarded(d.OrgFaction);

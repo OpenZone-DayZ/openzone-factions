@@ -306,8 +306,8 @@ class OZ_RoleOps
     }
 
     // Коли цей клієнт востаннє дзвонив мостом. Мапа росте лише на тих, хто
-    // справді щось просив, і чиститься виходом (OZF_Module.OnInvokeDisconnect
-    // -> Forget).
+    // справді щось просив, і чиститься виходом (OZF_Module.OnClientDisconnect
+    // -> ForgetActor).
     private static ref map<string, int> s_LastAsk = new map<string, int>();
     private static const int ASK_GAP_MS = 1000;
 
