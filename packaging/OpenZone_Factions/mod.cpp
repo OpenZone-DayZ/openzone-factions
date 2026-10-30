@@ -4,7 +4,7 @@
 // texture and says nothing, so a wrong path is worse than none.
 
 name        = "OpenZone Factions";
-author      = "Zone Protocol";
+author      = "OpenZone";
 authorID    = "";
 version     = "0.1";
 description = "Factions and organisations of the OpenZone series: membership, ranks, roles, the Discord mirror. REQUIRES OpenZone Core. github.com/covalschi/openzone-factions";

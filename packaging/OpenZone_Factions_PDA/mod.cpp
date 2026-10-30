@@ -4,7 +4,7 @@
 // texture and says nothing, so a wrong path is worse than none.
 
 name        = "OpenZone Factions PDA";
-author      = "Zone Protocol";
+author      = "OpenZone";
 authorID    = "";
 version     = "0.1";
 description = "Companion mod. The faction tab inside the OpenZone PDA. REQUIRES OpenZone Core, OpenZone Factions and OpenZone PDA -- without all three the game refuses to load. github.com/covalschi/openzone-factions";

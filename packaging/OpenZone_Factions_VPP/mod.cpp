@@ -4,7 +4,7 @@
 // texture and says nothing, so a wrong path is worse than none.
 
 name        = "OpenZone Factions VPP";
-author      = "Zone Protocol";
+author      = "OpenZone";
 authorID    = "";
 version     = "0.1";
 description = "Companion mod. The factions pane inside the OpenZone admin tab of VPP Admin Tools. REQUIRES OpenZone Core, OpenZone Factions, OpenZone Core VPP and VPP Admin Tools -- without all four the game refuses to load. github.com/covalschi/openzone-factions";
