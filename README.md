@@ -65,7 +65,7 @@ ui/                         layout descriptions (tokens come from ../openzone-co
 preview/                    gallery index for the UI eyes of dayz-agentic-modding-mcp
 dayz-mcp.toml               build and boot profile (machine paths in dayz-mcp.local.toml, not committed)
 packaging/<Mod>/            mod.cpp, meta.cpp -- launcher text and Workshop ids, see packaging/README.md
-keys/                       the series' public signing key (ZoneProtocol.bikey); the private half is not committed
+keys/                       the series' public signing key (OpenZone.bikey); the private half is not committed
 package.ps1                 assembles the @Mod folders for the Workshop, see packaging/README.md
 ```
 
